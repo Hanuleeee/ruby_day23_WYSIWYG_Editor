@@ -1,4 +1,8 @@
-<h1 id="title">Movies</h1><br/>
+<h1 id="title">Movies</h1>
+<input type="text" class="form-control movie-title">
+<div class="recomm-movie d-flex justify-content-start row">
+</div>
+<hr>
 <div id="title" class="row">
 <% @movies.each do |movie| %>
 <div class="card col-md-4">
@@ -14,6 +18,7 @@
 <% end %>
 </div>
 <br>
+<%= paginate @movies, theme: 'twitter-bootstrap-4' %>
 
 <%= link_to 'New Movie', new_movie_path %>
 
@@ -29,10 +34,22 @@
 
 <!-- 자바스크립트 -->
  <script>
+   $(document).on('ready', function(){
+     $('.movie-title').on('keyup', function(){  //이벤트 바꿔가면서 확인해보자
+       $('.recomm-movie').html('');  // 검색하고 나서 지웠을 때 정보 사라지도록
+       var title=$(this).val();
+       $.ajax({
+         url: '/movies/search_movie',
+         data: {
+           q: title
+         }
+       })
+     })
+   });
+ 
 // func2;
 // var func1 = function(){
 //   alert("하위~1");
-//   // 1. 함수 표현식
 //   // 선언되기 이전에 사용할 수 없다.
 // }
 // func1;

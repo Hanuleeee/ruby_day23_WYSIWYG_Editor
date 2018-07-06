@@ -4,4 +4,6 @@ class Movie < ApplicationRecord
     has_many :likes
     has_many :users, through: :likes
     has_many :comments
+    
+    paginates_per 8  # 한 페이지당 8개만 보여줌
 end

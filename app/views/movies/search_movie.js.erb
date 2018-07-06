@@ -1,0 +1,7 @@
+console.log("찾음");
+$('.recomm-movie').html(`
+<% @movies.each do |movie| %>
+<span class="badge badge-primary"><%= movie.title %></span>&nbsp;&nbsp; 
+<% end %>
+`); 
+// 검색된 title이 모두 찍혀야한다. @movies는 배열형태이므로 반복문 사

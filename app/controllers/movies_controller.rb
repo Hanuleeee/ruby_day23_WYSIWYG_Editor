@@ -1,12 +1,16 @@
 class MoviesController < ApplicationController
-  before_action :js_authenticate_user!, only: [:like_movie]
-  before_action :authenticate_user!, except: [:index, :show]  # 둘 빼고 로그인한 유저만 보기가능
+  before_action :js_authenticate_user!, only: [:like_movie, :create_comment, :update_comment, :destroy_comment]
+  before_action :authenticate_user!, except: [:index, :show, :search_movie]  # 둘 빼고 로그인한 유저만 보기가능
   before_action :set_movie, only: [:show, :edit, :update, :destroy, :create_comment]
 
   # GET /movies
   # GET /movies.json
   def index
-    @movies = Movie.all
+    @movies = Movie.page(params[:page])
+    # respond_to do |format|  # html, js가 왔을때 각각 응답을 다르게 줄수 있다.
+    #   format.html
+    #   format.js
+    # end
   end
 
   # GET /movies/1
@@ -101,6 +105,26 @@ class MoviesController < ApplicationController
     @comment = Comment.find(params[:comment_id])
     @comment.update(contents: params[:contents])
   end
+  
+  def search_movie
+    #원래는 이 액션명과 일치하는 js파일을 찾아서 data를 보내줌
+    #Then, 다른 파일로 보내주어야 할때는 이렇게 쓰면 내가 원하는 js파일로 보낼수 있다. 
+    
+    respond_to do |format|
+      if params[:q].strip.empty? 
+        format.js {render 'no content'}
+      else
+        @movies= Movie.where("title LIKE ?", "#{params[:q]}%")  # 첫글자만 일치하고 뒤(%)는 아무거나
+        format.js {render 'search_movie'}
+      end
+    end
+
+    # if params[:q].strip.empty? 
+    #   render nothing: true # 아무 응답없음
+    # end
+    # @movies = Movie.where("title LIKE ?", "#{params[:q]}%") 
+  end
+
 
   private
     # Use callbacks to share common setup or constraints between actions.

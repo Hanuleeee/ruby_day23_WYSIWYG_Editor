@@ -1,443 +1,96 @@
-# 20180705_Day18
-
-
+# 20180706_Day19
 
 ### 복습
 
-* ajax : 비동기 자바스크립트
+* 기능을 구현하고자 할때, 그 과정들을 세분화하는 것이 중요하다.
+* 레일즈 프로젝트에서 ajax를 구현하기 위해서는 다음과 같은 순서를 갖는다.
 
-  페이지하나 동작하는 중간에 서버에 요청을 보내서 페이지에 Reload없이 서버에서받은 데이터로 요소들을 변화시키는것 
-
-```javascript
-$.ajax({
-    url: 어느 주소로 요청을 보낼지,
-    method: 어떤 http method 요청을 보낼지,
-    data: {
-        k: v 어떤 값을 함께 보낼지,
-        // 서버에서는 params[k] => v
-    }
-})
-```
-
-* 처음 `show.html.erb` 에서 url, method, data 를 지정해주고, 이 요청을 받아드릴 `routes` 에 해당 url을 컨트롤러에 지정한다.
-* *movies_controller* 에서 좋아요, 좋아요 취소 로직을 설정했다.
-
-
-
-## 좋아요 버튼 + 개수 넣고 변화하는 것
-
-* controller에 like_movie 메소드 추가
-
-* `__.frozen?` : 이 메소드로 좋아요가 새로 만들어 진 것인지, 삭제를 한 건지 알 수 있다.
-
-
-
-//좋아요가 취소된 경우-
-//좋아요 취소버튼 -> 좋아요 버튼 
-//$('.like').text("좋아요").toggleClass("btn-info"); 
-
-
-
-//좋아요가 새로 눌린경우
-//좋아요 버튼 -> 좋아요 취소 
-// $('.like').text("좋아요 취소").toggleClass("btn-warning btn-info text-white"); 
-
-
-
-`" "`  `' '`  : 줄바꿈 X
-
-` `` ` : 줄바꿈 O
+> * 모든 동작을 포함하는 js코드를 작성한다.
+> * ajax 코드를 작성한다.
+> * url을 지정한다.
+> * 해당 url을 *config/routes.rb* 에서 controller#action 을 지정한다.
+> * controller#action을 작성한다.
+> * *app/views/controller_name*에 action명과 일치하는 `js.erb` 파일을 작성한다.
 
 
 
 
 
-* 댓글을 입력받을 폼을 작성
-* form(요소)이 제출(이벤트)될 때(이벤트 리스너)
-* form에 input(요소)안에 있는 내용물(메소드)을 받아서
-* ajax요청으로 서버에 '/create/comment'로 id값도 같이 보낸다.
-* 서버에서 저장하고, response 보내줄 js.erb 파일을 작성한다.
-* js.erb 파일에서는 댓글이 표시될 영역에 등록된 댓글의 내용을 추가해준다.
+### gem faker
+
+- seed 파일을 통해 데이터를 랜덤으로 생성  
+
+> <https://github.com/stympy/faker> 
 
 
 
-
-
-## *comment model* 만들기
-
-
-
-`$ rails g model comment`
-
-* column:user_id, movie_id, contents
-
-* association:
-
-  * movie(1) - comment(N)
-  * user(1) - comment(N)
-  * 한유저가 여러개의 무비에 댓글을 달 수 있고 무비도 여러사람에게 댓글을 받을 수 있다.
-
-* url("movies/:movie_id/comments", method:post) 인 ajax 코드 짜보기
-
-  
-
-*app/views/movies/show.html.erb*  : db저장 전
-
-```erb
-<form class="text-right comment">
-    <input class="form-control comment-contents">
-    <input type="submit" value="댓글쓰기" class="btn btn-primary">
-</form>
-<hr>
-<h3>댓글</h3>
-<ul class="list-group comment-list">
-  <!--<li class="list-group-item">Cras justo odio</li>-->
-</ul>
-<hr>
-<script>
-//document가 다 준비된(load) 다음 동작해라 
-//html보다 js가 먼저 작동할 위험이 사라짐(항상 여기에 넣기)
-$(document).on('ready',function(){
-    $('.like').on('click', function(){  //클래스로 좋아요 버튼 찾기
-        console.log("like!!!"); 
-        $.ajax({
-           url: '/likes/<%= @movie.id %>' 
-        });
-    })  
-    $('.comment').on('submit', function(e) {   //추가
-        e.preventDefault();   //이게뭐라고?
-        var comm = $('.comment-contents').val();
-        console.log(comm);
-        $('.comment-list').prepend(`<li class="list-group-item">${comm}</li>`); 			//append와 prepend 차이 알아둬
-        $('.comment-contents').val('');
-    });
-});  
-</script>
-```
-
-* `.append` : 제일끝에 추가시키는 jquery 메소드
-
-  `.prepend` : 앞에 추가시키는 jquery메소드
+*Gemfile* 에  `gem 'faker'`  추가
 
 
 
-### 새로운 routes 설정 방법
-
->  [2.7 Nested Resources](http://guides.rubyonrails.org/routing.html#nested-resources)
+*db/seeds.rb*
 
 ```ruby
-resources :movies do
-  member do    # id까지 포함
-    get '/test' => 'movies#test_member'
-  end
-  collection do
-    get '/test' => 'movies#test_collection'
-  end
+genres = ["Horror", "Thriller", "Action", "Drama", "Comedy", "Romance", "SF", "Adventure"]
+images = %w(...)
+# 배열만들때 %w 를 써서 space로 구분가능
+
+30.times do
+movie = Movie.create(title: Faker::Movie.quote,
+                      genre: genres.sample,
+                      director: Faker::FunnyName.name_with_initial,
+                      actor: Faker::Name.name,  
+                      description: Faker::Lorem.paragraph,
+                      remote_image_path_url: images.sample,
+                      user_id: 1)
 end
-
-# `rake routes`
- test_movie GET    /movies/:id/test(.:format)     movies#test_member
- test_movies GET    /movies/test(.:format)         movies#test_collection
-```
-
-따라서, 다음과 같이 *routes*를 설정할 수 있다.
-
-```ruby
-post '/movies/:movie_id/comments' => 'movies#comments'
-# 중복되니까 이렇게 쓰지않고.
-```
-
-```ruby
-resources :movies do
-  member do    # id까지 포함
-    post '/comments' => 'movies#create_comment'
-  end
-end
-
-# `rake routes`
- comments_movie POST    /movies/:id/comments(.:format) movies#create_comment
 ```
 
 
 
-* `create_comment` 메소드 설정
+ `rake db:drop`: migrate 파일을 수정했을때
 
-*app/controllers/movies_controllers*
-
-```ruby
-before_action :set_movie, only: [:show, :edit, :update, :destroy, :create_comment] #추가
-...
-   def create_comment
-    # @movie = Movie.find(params[:id])  #before_action에 정의
-    @comment = Comment.where(user_id: current_user.id, movie_id: @movie.id, contents: params[:contents])
-    # @movie.comments.new(user_id: current_user.id).save  #위의 축약형
-  end
-
-...  
-```
+ `rake db:reset`: drop + migrate + seed 한번에 실행
 
 
 
-* 기존에 등록되어 있는 댓글 출력하기
-
-*app/controllers/movies_controllers*
-
-```erb
-...
-<ul class="list-group comment-list">
-  <!-- 기존에 등록되어 있는 댓글 출력하기 -->
-  <% @movie.comments.reverse.each do |comment|%>  
-  <li class="comment-<%= comment.id%> list-group-item d-flex justify-content-between">
-      <span class="comment-detail-<%=comment.id%>"><%= comment.contents %></span>
-  </li>
-  <% end %>
-</ul>
-...
-```
-
-현재 유저가 등록한 댓글들 => `user.comments`
-
-영화 하나가 가지고 있는 댓글들 => `movie.comments`
 
 
+## 영화 검색하기
 
-## 댓글 삭제버튼 만들기 & 동작
+* input 창에 글자를 한글자 입력할때마다(이벤트리스너)
 
+* server로 해당 글자를 검색하는 요청을 보내고
 
-
-* 댓글에 있는 삭제 버튼(요소)을 누르면(이벤트 리스너) 
-
-  해당 댓글이 눈에 안보이게 되고(이벤트 핸들러), 
-
-  실제 DB에서도 삭제가 된다(ajax).
+* 응답으로 날아온 영화제목 리스트를 화면에 보여준다.
 
   
 
-*app/views/movies/show.html.erb*
+*views/movies/index.html.erb*
+
+> [bootstrap](https://getbootstrap.com/docs/4.1/utilities/flex/#justify-content) 여기서 bootstrap class를 찾아서 사용
 
 ```erb
-...
-<ul class="list-group comment-list">
-  <!-- 기존에 등록되어 있는 댓글 출력하기 -->
-  <% @movie.comments.reverse.each do |comment|%>  
-  <li class="list-group-item d-flex justify-content-between">
-      <span class="comment-detail-<%=comment.id%>"><%= comment.contents %></span>
-      <button data-id="<%=comment.id %>" class="btn btn-danger destroy-comment">삭제</button>
-  </li>
-  <% end %>
-</ul>
-...
-<script>
-$(document).on('ready',function(){
-    ...
-    $('.destroy-comment').on('click', function(){
-        console.log("destroyed!!!");
-         $(this).parent().remove();   
-        // = $(this).parent()의 바로위 부모 태그를 지운다.
-    })
-}); 
-    
-</script>
-```
-
-* `$(this).parent()`는 `.destroy-comment`의 자신의 바로위 부모태그. 
-
-  즉, `li` 태그를 의미한다.
-
-
-
-*views/movies/show.html.erb*  : ajax 추가(db에서 삭제)
-
-```erb
+<h1 id="title">Movies</h1>
+<input type="text" class="form-control movie-title">
+<div class="recomm-movie d-flex justify-content-start row">
+</div>
+....
 <script>
 ...
-    $(document).on('click', '.destroy-comment', function(){  //다시한번 reload!!하려고 document
-        console.log("destroyed!!!");
-        var comment_id = $(this).attr('data-id'); 
-        //$(this).data('id');  //바로 위랑 똑같음
-        $.ajax({
-            url: "/movies/comments/" + comment_id,
-            method: "delete"
-        })
-    });
- ...
-</script>
-```
-
-
-
-*routes*
-
-```ruby
-  root 'movies#index'
-  resources :movies do
-      ...
-    collection do  #추가
-      delete '/comments/:comment_id' => 'movies#destroy_comment'
-    end
-  end
-```
-
-
-
-*app/controllers/movies_controller.rb*  :  `destroy_comment `메서드 추가
-
-```ruby
-...
- def destroy_comment
-    Comment.find(params[:comment_id]).destroy
-  end
-...
-```
-
-
-
-*views/movies/destroy_commentjs/erb*  만들기
-
-```erb
-$('.comment-list').prepend(`
-<li class="comment-<%= @comment.id%> list-group-item d-flex justify-content-between">
-      <%= @comment.contents %> ...(<%= @comment.user.email %>)
-      <button data-id="<%=@comment.id %>" class="btn btn-danger destroy-comment">삭제</button>
-  </li>`);
-$('.comment-contents').val('');
-alert("댓글이 등록되었습니다.");
-```
-
-
-
-
-
-## 수정버튼 만들기 + 동작
-
-
-
-[이벤트 리스너 + 이벤트 핸들러]
-
-* 수정버튼을 클릭하면
-
-* 댓글이 있던 부분이 입력창으로 바뀌면서 원래 있던 댓글의 내용이 입력창에 들어간다.
-
-* 수정버튼은 확인 버튼으로 바뀐다.
-
-  
-
-### 수정버튼 추가
-
-*app/views/movies/show.html.erb*   
-
-```erb
-...
-<ul class="list-group comment-list">
-  <!--<li class="list-group-item">Cras justo odio</li>-->
-  <!-- 기존에 등록되어 있는 댓글 출력하기 -->
-  <% @movie.comments.reverse.each do |comment|%>  
-  <li class="comment-<%= comment.id%> list-group-item d-flex justify-content-between">
-      <span class="comment-detail-<%=comment.id%>"><%= comment.contents %></span>
-      <div>
-          <button data-id="<%=comment.id %>" class="btn btn-warning text-white edit-comment">수정</button>
-          <button data-id="<%=comment.id %>" class="btn btn-danger destroy-comment">삭제</button>
-      </div>
-  </li>
-  <% end %>
-</ul>
-...
-```
-
-
-
-###  댓글 수정 입력창 & 댓글 불러와서 넣기
-
-* 댓글이 있던 부분이 입력창으로 바뀌면서 원래 있던 댓글의 내용이 입력창에 들어간다. 수정버튼을 확인버튼으로 바꾼다.
-
-  
-
-*views/movies/show.html.erb*
-
-```erb
-<script>
-...
-    $('document').on('click','.edit-comment', function(){
-        // var detail= $('.comment-detail').text();
-        // console.log('detail');   이렇게 하면 댓글들이 전부합쳐서 나옴
-        var comment_id = $(this).data('id');
-        var edit_comment = $(`.comment-detail-${comment_id}`);
-        var contents = edit_comment.text();
-        edit_comment.html(`
-        <input type="text" value="${contents}" class="form-control edit-comment-${comment_id}">`);
-    	// 수정버튼을 확인버튼으로 바꾼다.
-        $(this).text("확인").removeClass("edit-comment btn-warning").addClass("update-comment btn-dark");   
-    });
-...
-</script>
-```
-
-
-
-------
-
-
-
-[이벤트 리스너 + 이벤트 핸들러]
-
-* 내용 수정 후 확인 버튼을 클릭하면 
-* 입력 창에 있던 내용물이 댓글의 원래 형태로 바뀌고
-* 확인버튼은 다시 수정버튼으로 바뀐다. 
-
-
-
-### 댓글 수정 입력창의 내용 저장
-
-*views/movies/show.html.erb*
-
-```erb
-<script>
-...
-    $(document).on('click', '.update-comment', function(){
-        console.log("update");
-        var comment_id = $(this).data('id');
-        var comment_form = $(`.edit-comment-${comment_id}`); //위의 input의 class
-        console.log(comment_form.val());
-        var edit_comment = $(`.comment-detail-${comment_id}`);
-        edit_comment.html(comment_form.val());   //수정한 내용을 집어넣어줌
-        $(this).text("수정").removeClass("update-comment btn-dark").addClass("edit-comment btn-warning");
-    });
-    
-...
-</script>
-```
-
-* `$(.update-comment).on() `을  `$(document).on('click', '.update-comment'`로 바꾼다.
-
-  Why?  Reload 필요!(처음부터 다시 읽어들이는 것)
-
-
-
-
-
-* 입력창에 있던 내용물을 ajax로 서버에 요청을 보낸다.
-* 서버에서는 해당 댓글을 찾아 내용을 업데이트한다.
-
-
-
-*views/movies/show.html.erb* : ajax 추가
-
-```erb
-<script>
- ...
-	$(document).on('click', '.update-comment', function(){
-        console.log("update");
-        var comment_id = $(this).data('id');
-        var comment_form = $(`.edit-comment-${comment_id}`);
-        $.ajax({
-            url: "/movies/comments/" +comment_id,
-            method: "patch",
-            data: {
-                contents: comment_form.val()
-            }
-        })
-    });
-...
+   $(document).on('ready', function(){
+     $('.movie-title').on('keyup', function(){
+       $('.recomm-movie').html('');  // 검색하고 나서 지웠을 때 정보 사라지도록
+       var title=$(this).val();
+       $('.recomm-movie').html(`<a>${$(this).val()}</a>`);
+       $.ajax({
+         url: '/movies/search_movie',  //요청보내기
+         data: {
+           q: title
+         }
+       })
+     })
+   });
 </script>
 ```
 
@@ -446,113 +99,118 @@ alert("댓글이 등록되었습니다.");
 *routes.rb*
 
 ```ruby
-...
-	collection do
-      delete '/comments/:comment_id' => 'movies#destroy_comment'
-      patch '/comments/:comment_id' => 'movies#update_comment'  # 추가
+  resources :movies do
+    collection do
+      ...
+      get '/search_movie' => 'movies#search_movie'   #추가
     end
-...
+  end
 ```
 
 
 
-*app/controllers/movies_controller.rb*  :  `update_comment `메서드 추가
+*app/controllers/movies_controller.rb*
 
 ```ruby
 ...
-  def update_comment
-    @comment = Comment.find(params[:comment_id])
-    @comment.update(contents: params[:contents])
+  def search_movie
+    #원래는 이 액션명과 일치하는 js파일을 찾아서 data를 보내줌
+    #But, 다른 파일로 보내주어야 할때는 다음과 같이 작성하면 내가 원하는 js파일로 보낼수 있다. 
+    
+    respond_to do |format|
+      # 공백이나 space눌렀을때 정보나오지않게 하려고 설정
+      if params[:q].strip.empty? 
+        format.js {render 'no content'}
+      else
+        @movies= Movie.where("title LIKE ?", "#{params[:q]}%") #첫글자만 일치하고 뒤(%)는 아무거나
+        format.js {render 'search_movie'}
+      end
+
+    # if params[:q].strip.empty? 
+    #   render nothing: true # 아무 응답없음
+    # end
+    # @movies = Movie.where("title LIKE ?", "#{params[:q]}%") 
   end
 ...
 ```
 
+* 원래는 액션을 만들면, 액션명과 일치하는 javascript파일을 찾아서 data를 보내준다.
+
+* 여기서는 영화정보를 검색할때, 공백이나 space가 눌렸을때 아무런 정보도 검색되지 않게 설정하기 위해서 
+
+  `params[:q].strip.empty? `일 경우 다른 곳으로 rendering 시켜야 한다. 
+
+* 따라서 `respond_to do |format|`을 추가해서 우리가 원하는 파일로 render 시킬수 있게 된다.
 
 
-*views/movies/update_comment.js.erb*  만들기
+
+*views/movies/search_movie.js.erb* 파일을 만든다.
+
+* *views/movies/index.html.erb*에서 ` $('.recomm-movie').html('<a>${$(this).val()}</a>');` 을 삭제하고 
+
+  `search_movie.js.erb`에서 작성한다.
 
 ```erb
-alert("수정완료");
-var edit_comment = $('.comment-detail-<%= @comment.id %>');
-edit_comment.html('<%= @comment.contents %>');  //수정한 내용을 집어넣어줌
-$('.update-comment').text("수정").removeClass("update-comment btn-dark").addClass("edit-comment btn-warning");
+console.log("찾음");
+$('.recomm-movie').html(`
+<% @movies.each do |movie| %>
+<span class="badge badge-primary"><%= movie.title %></span>&nbsp;&nbsp; 
+<% end %>
+`); 
+// 검색된 title이 모두 찍혀야한다. @movies는 배열형태이므로 반복문 사용
+```
+
+* `&nbsp;`는 공백을 의미한다.
+
+
+
+
+
+## Pagination:  *kaminari*
+
+> https://github.com/kaminari/kaminari
+
+> https://github.com/KamilDzierbicki/bootstrap4-kaminari-views
+
+
+
+*Gemfile.rb* 
+
+```ruby
+gem 'kaminari'
+gem 'bootstrap4-kaminari-views'
 ```
 
 
 
+*models/movie.rb*
+
+```ruby
+...
+	paginates_per 8  # 한 페이지당 8개만 보여줌	
+...
+```
+
+* page를 동작시키는 방법: 처음에 뽑아올때 몇개씩뽑아오는지 정하기
 
 
-*views/movies/create_comment.js.erb*  
 
-: **새 댓글 작성했을때, 바로 수정가능하도록 수정버튼 추가**
+*app/views/movies/index.html.erb*
 
 ```erb
-$('.comment-list').prepend(`
-  <li class="comment-<%= @comment.id%> list-group-item d-flex justify-content-between">
-      <span class="comment-detail-<%=@comment.id%>"><%= @comment.contents %></span>
-      <div>
-          <button data-id="<%=@comment.id %>" class="btn btn-warning text-white edit-comment">수정</button>
-          <button data-id="<%=@comment.id %>" class="btn btn-danger destroy-comment">삭제</button>
-      </div>
-  </li>`);
-$('.comment-contents').val('');
-alert("댓글이 등록되었습니다.");
+...
+<%= paginate @movies, theme: 'twitter-bootstrap-4' %>   # 추가
+...
 ```
 
 
 
-### 댓글 수정이 한번에 하나의 댓글만 가능하게
+*app/controllers/movies_controller.rb*
 
-수정버튼 하나 누르면 다른 수정버튼들은 못누르게 설정한다. 
-
-즉, 댓글 수정은 수정 중에 한번에 하나만 되도록!
-
-
-
-* 수정버튼을 누르면 
-
-* 전체 문서 중에서  `update-comment` 클래스를 가진 버튼이 있는 경우에
-
-* 더이상 진행하지 않고 이벤트 핸들러를 끝냄
-
-  `return false` 를 하면 이벤트 핸들러가 끝난다.
-
-  
-
-*views/movies/show.html.erb*   : `if ($('.update-comment').length == 0)` 추가
-
-```erb
+```ruby
+  def index
+    @movies = Movie.page(params[:page]) 
+  end
 ...
-<script>
-...
-    $(document).on('click','.edit-comment', function(){
-        // var detail= $('.comment-detail').text();
-        // console.log('detail');   이렇게 하면 댓글들이 전부합쳐서 나옴
-        if ($('.update-comment').length == 0) {
-        var comment_id = $(this).data('id');
-        var edit_comment = $(`.comment-detail-${comment_id}`);
-        var contents = edit_comment.text().trim();  //trim : 앞뒤공백 제거!
-        edit_comment.html(`
-        <input type="text" value="${contents}" class="form-control edit-comment-${comment_id}">`);
-        $(this).text("확인").removeClass("edit-comment btn-warning").addClass("update-comment btn-dark");
-        } else {
-        alert("수정이 불가합니다.");
-        }
-    });
-...
-</script>
 ```
 
-
-
-
-
-**순서**
-
-function만들때 다만들고 ajax만드는게 편하다. 
-
-라우트 설정하고
-
-컨트롤러에서 메소드 정의하고
-
-js.erb 만들기
