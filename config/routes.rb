@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  mount RailsAdmin::Engine => '/mine', as: 'rails_admin'
   devise_for :users
   root 'movies#index'
   resources :movies do
@@ -14,6 +15,8 @@ Rails.application.routes.draw do
     #   get '/test' => 'movies#test_collection'
     # end
   end
+  
+  post '/uploads' => 'movies#upload_image'
   
   get '/likes/:movie_id' => 'movies#like_movie'
  # post '/movies/:movie_id/comments' => 'movies#comments'

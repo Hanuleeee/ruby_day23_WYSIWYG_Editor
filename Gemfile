@@ -5,6 +5,9 @@ git_source(:github) do |repo_name|
   "https://github.com/#{repo_name}.git"
 end
 
+# rails admin
+gem 'rails_admin'
+
 # beautify
 gem 'bootstrap', '~> 4.1.1'
 # authentication
@@ -12,6 +15,9 @@ gem 'devise'
 # file upload
 gem 'carrierwave'   #이미지 업로더
 gem 'mini_magick'
+
+# wysiwyg editor
+gem 'summernote-rails', '~> 0.8.10.0'
 
 # pagination
 gem 'kaminari'

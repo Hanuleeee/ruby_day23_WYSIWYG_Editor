@@ -124,6 +124,11 @@ class MoviesController < ApplicationController
     # end
     # @movies = Movie.where("title LIKE ?", "#{params[:q]}%") 
   end
+  
+  def upload_image
+    @image = Image.create(image_path: params[:upload][:image])  # hash 형태라서..
+    render json: @image
+  end
 
 
   private
